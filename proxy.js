@@ -1,34 +1,27 @@
 export default async function handler(req, res) {
   const { url } = req.query;
-
-  if (!url) {
-    return res.status(400).json({ error: 'Missing url parameter' });
-  }
+  if (!url) return res.status(400).json({ error: 'Missing url parameter' });
 
   try {
     const targetUrl = decodeURIComponent(url);
-
-    // Forçamos o método POST se for para a API da ZN Digital
-    const fetchOptions = {
-      method: 'POST', 
-      headers: { 
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'BoostPanel/1.0'
-      },
-    };
-
-    // Captura os dados enviados pelo painel
+    
+    // Pegamos os dados que o painel enviou (key, action, etc)
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
-    fetchOptions.body = Buffer.concat(chunks);
+    const body = Buffer.concat(chunks).toString();
 
-    const response = await fetch(targetUrl, fetchOptions);
-    const data = await response.text();
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      body: body
+    });
 
+    const data = await response.json();
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(response.status).send(data);
+    res.status(200).json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
