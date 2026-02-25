@@ -8,18 +8,19 @@ export default async function handler(req, res) {
   try {
     const targetUrl = decodeURIComponent(url);
 
-    const headers = { 'Content-Type': req.headers['content-type'] || 'application/x-www-form-urlencoded' };
-
+    // Forçamos o método POST se for para a API da ZN Digital
     const fetchOptions = {
-      method: req.method,
-      headers,
+      method: 'POST', 
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'BoostPanel/1.0'
+      },
     };
 
-    if (req.method === 'POST') {
-      const chunks = [];
-      for await (const chunk of req) chunks.push(chunk);
-      fetchOptions.body = Buffer.concat(chunks);
-    }
+    // Captura os dados enviados pelo painel
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    fetchOptions.body = Buffer.concat(chunks);
 
     const response = await fetch(targetUrl, fetchOptions);
     const data = await response.text();
